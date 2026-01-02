@@ -10,7 +10,7 @@ function Login({ onLoginSuccess }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const res = await axios.post('http://192.168.0.3:3000/login', { email, password });
+      const res = await axios.post('https://gestor-academico-6zru.onrender.com/login', { email, password });
       // Si el login es correcto, guardamos el token y avisamos a App.jsx
       localStorage.setItem('token', res.data.token);
       onLoginSuccess();
@@ -22,7 +22,7 @@ function Login({ onLoginSuccess }) {
   const handleRegister = async () => {
     // Registro rápido para probar (Hardcodeado para el ejemplo)
     try {
-        await axios.post('http://192.168.0.3:3000/registro', { 
+        await axios.post('https://gestor-academico-6zru.onrender.com/registro', { 
             nombre: 'Nuevo Usuario', 
             email: email, 
             password: password 
