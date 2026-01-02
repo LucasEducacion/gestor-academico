@@ -188,29 +188,51 @@ app.post('/materias/:id', async(req, res) => {
     try {
         const verified = jwt.verify(token, SECRET_KEY);
         const usuario_id = verified.id;
-        const materia_id = req.params.id; // Viene de la URL
-        const { nota, condicion, disponibilidad } = req.body; // Vienen del Frontend
+        const materia_id = req.params.id;
+        const { nota, condicion, disponibilidad } = req.body;
 
-        // 2. Verificar si ya existe un registro para este usuario y esta materia
+        // 2. Guardar o Actualizar la materia actual
         const checkQuery = 'SELECT * FROM notas_usuarios WHERE usuario_id = $1 AND materia_id = $2';
         const checkResult = await pool.query(checkQuery, [usuario_id, materia_id]);
 
         if (checkResult.rows.length > 0) {
-            // CASO A: YA EXISTE -> ACTUALIZAMOS (UPDATE)
             await pool.query(
                 `UPDATE notas_usuarios 
-         SET nota = $1, condicion = $2, disponibilidad = $3 
-         WHERE usuario_id = $4 AND materia_id = $5`, [nota, condicion, disponibilidad, usuario_id, materia_id]
+                 SET nota = $1, condicion = $2, disponibilidad = $3 
+                 WHERE usuario_id = $4 AND materia_id = $5`, [nota, condicion, disponibilidad, usuario_id, materia_id]
             );
         } else {
-            // CASO B: NO EXISTE -> CREAMOS (INSERT)
             await pool.query(
                 `INSERT INTO notas_usuarios (usuario_id, materia_id, nota, condicion, disponibilidad) 
-         VALUES ($1, $2, $3, $4, $5)`, [usuario_id, materia_id, nota, condicion, disponibilidad]
+                 VALUES ($1, $2, $3, $4, $5)`, [usuario_id, materia_id, nota, condicion, disponibilidad]
             );
         }
 
-        res.send('Guardado correctamente');
+        // --- 3. PASO NUEVO: MAGIA DE CORRELATIVIDADES ---
+        // Esta consulta desbloquea automáticamente las materias siguientes
+        // si sus correlativas están 'Aprobada' O 'Cursada'.
+        await pool.query(`
+            UPDATE notas_usuarios n_destino
+            SET disponibilidad = 'Disponible'
+            WHERE usuario_id = $1
+            AND disponibilidad = 'No Disponible' -- Solo revisamos las bloqueadas
+            AND NOT EXISTS (
+                -- Buscamos si existe alguna correlativa que NO cumpla los requisitos
+                SELECT 1 
+                FROM correlatividades c
+                LEFT JOIN notas_usuarios n_requisito 
+                    ON c.correlativa_id = n_requisito.materia_id 
+                    AND n_requisito.usuario_id = $1
+                WHERE c.materia_id = n_destino.materia_id
+                AND (
+                    n_requisito.condicion IS NULL OR 
+                    (n_requisito.condicion != 'Aprobada' AND n_requisito.condicion != 'Cursada')
+                )
+            )
+        `, [usuario_id]);
+        // ------------------------------------------------
+
+        res.send('Guardado y correlatividades actualizadas');
 
     } catch (error) {
         console.error(error);
