@@ -68,7 +68,7 @@ app.get('/materias', async(req, res) => {
         // 3. Crear un Mapa de las materias aprobadas por el usuario para consulta rápida
         // Set contiene los IDs de las materias que el usuario ya aprobó
         const aprobadas = new Set(
-            materias.filter(m => m.condicion === 'Aprobada').map(m => m.id)
+            materias.filter(m => m.condicion === 'Aprobada' || m.condicion === 'Cursada').map(m => m.id)
         );
 
         // 4. Calcular Disponibilidad Automáticamente
