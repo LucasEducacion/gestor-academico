@@ -1,0 +1,16 @@
+# Dependencias gigantes (no se suben, se instalan)
+node_modules/
+client/node_modules/
+server/node_modules/
+
+# Archivos de entorno (SECRETOS - NO SUBIR)
+.env
+.env.local
+
+# Archivos de sistema/IDE
+.DS_Store
+.vscode/
+
+# Build de producción
+dist/
+build/
