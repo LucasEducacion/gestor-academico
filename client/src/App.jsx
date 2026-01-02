@@ -34,7 +34,7 @@ function App() {
   const aprobarAnio = async (categoriaId, nombreAnio) => {
     handleCloseMenu();
     try {
-      await axios.post('http://192.168.0.3:3000/materias/aprobar-anio', { categoria_id: categoriaId }, {
+      await axios.post('https://gestor-academico-6zru.onrender.com/materias/aprobar-anio', { categoria_id: categoriaId }, {
         headers: { Authorization: `Bearer ${token}` }
       });
       fetchMaterias();
@@ -62,7 +62,7 @@ function App() {
 
   const fetchMaterias = useCallback(() => {
     if (!token) return;
-    axios.get('http://192.168.0.3:3000/materias', {
+    axios.get('https://gestor-academico-6zru.onrender.com/materias', {
       headers: { Authorization: `Bearer ${token}` }
     })
     .then((res) => setRows(res.data))
@@ -77,7 +77,7 @@ function App() {
 
   const handleReset = async () => {
     try {
-      await axios.delete('http://192.168.0.3:3000/materias/reset', {
+      await axios.delete('https://gestor-academico-6zru.onrender.com/materias/reset', {
         headers: { Authorization: `Bearer ${token}` }
       });
       fetchMaterias();
@@ -90,7 +90,7 @@ function App() {
 
   const handleProcessRowUpdate = async (newRow, oldRow) => {
     try {
-      await axios.post(`http://192.168.0.3:3000/materias/${newRow.id}`, {
+      await axios.post(`https://gestor-academico-6zru.onrender.com/materias/${newRow.id}`, {
         nota: newRow.nota,
         condicion: newRow.condicion,
         disponibilidad: newRow.disponibilidad
