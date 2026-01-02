@@ -104,39 +104,72 @@ app.get('/materias', async(req, res) => {
     }
 });
 
+// --- RUTA DE REGISTRO MEJORADA ---
 app.post('/registro', async(req, res) => {
     const { nombre, email, password } = req.body;
-    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // 1. VALIDACIÓN: Que no haya campos vacíos
+    if (!nombre || !email || !password) {
+        return res.status(400).send('Todos los campos son obligatorios');
+    }
+
+    // 2. VALIDACIÓN: Formato de Email (Debe tener @ y punto)
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+        return res.status(400).send('Debes ingresar un email válido (ej: test@test.com)');
+    }
+
+    // 3. VALIDACIÓN: Longitud de contraseña (Mínimo 8)
+    if (password.length < 8) {
+        return res.status(400).send('La contraseña debe tener al menos 8 caracteres');
+    }
 
     try {
+        // Verificar si el usuario ya existe antes de intentar crearlo
+        const userCheck = await pool.query('SELECT * FROM usuarios WHERE email = $1', [email]);
+        if (userCheck.rows.length > 0) {
+            return res.status(400).send('El usuario ya está registrado');
+        }
+
+        const hashedPassword = await bcrypt.hash(password, 10);
+
         await pool.query(
             'INSERT INTO usuarios (nombre, email, password) VALUES ($1, $2, $3)', [nombre, email, hashedPassword]
         );
         res.send('Usuario creado exitosamente');
+
     } catch (error) {
+        console.error(error);
         res.status(500).send('Error creando usuario');
     }
-})
+});
 
+// --- RUTA DE LOGIN MEJORADA ---
 app.post('/login', async(req, res) => {
     const { email, password } = req.body;
 
+    // 1. Evitar login con campos vacíos
+    if (!email || !password) {
+        return res.status(400).json({ error: 'Email y contraseña son obligatorios' });
+    }
+
     try {
-        // 1. Buscar usuario
+        // 2. Buscar usuario
         const result = await pool.query('SELECT * FROM usuarios WHERE email = $1', [email]);
         if (result.rows.length === 0) return res.status(400).json({ error: 'Usuario no encontrado' });
 
         const user = result.rows[0];
 
-        // 2. Comparar contraseñas
+        // 3. Comparar contraseñas
         const validPassword = await bcrypt.compare(password, user.password);
         if (!validPassword) return res.status(400).json({ error: 'Contraseña incorrecta' });
 
-        // 3. Crear Token
+        // 4. Crear Token
         const token = jwt.sign({ id: user.id, nombre: user.nombre }, SECRET_KEY, { expiresIn: '1h' });
 
         res.json({ token, nombre: user.nombre });
     } catch (error) {
+        console.error(error);
         res.status(500).send('Error en el servidor');
     }
 });
