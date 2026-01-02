@@ -107,9 +107,13 @@ function App() {
   };
 
   const columns = [
-    // La columna ID ocupa espacio valioso en el celular, la ocultaremos por defecto
+    // 1. ID
     { field: 'id', headerName: 'ID', width: 70 },
+    
+    // 2. MATERIA
     { field: 'materia', headerName: 'Materia', width: isMobile ? 200 : 350, flex: isMobile ? 0 : 1 },
+    
+    // 3. AÑO
     { 
       field: 'anio', headerName: 'Año', width: 140,
       renderCell: (p) => (
@@ -123,10 +127,23 @@ function App() {
         </div>
       )
     },
-    { field: 'nota', headerName: 'Nota', width: 80, type: 'number', editable: true, align: 'center', headerAlign: 'center' },
-    { field: 'condicion', headerName: 'Condición', width: 130, editable: true, type: 'singleSelect', valueOptions: ['Cursada', 'Aprobada', 'No aprobada', 'Pendiente'] },
+
+    // 4. CONDICIÓN (Movida aquí)
     { 
-      field: 'disponibilidad', headerName: 'Estado', width: 150, editable: false,
+      field: 'condicion', 
+      headerName: 'Condición', 
+      width: 130, 
+      editable: true, 
+      type: 'singleSelect', 
+      valueOptions: ['Cursada', 'Aprobada', 'No aprobada'] 
+    },
+
+    // 5. DISPONIBILIDAD (Movida aquí)
+    { 
+      field: 'disponibilidad', 
+      headerName: 'Disponibilidad', // Antes decía "Estado", ahora dice "Disponibilidad"
+      width: 150, 
+      editable: false,
       renderCell: (params) => {
         let color = '#757575'; let fontWeight = 'normal'; let bg = 'transparent';
         if (params.value === 'Disponible') { color = '#2e7d32'; fontWeight = 'bold'; bg = '#e8f5e9'; }
@@ -139,7 +156,10 @@ function App() {
           </div>
         )
       }
-    }
+    },
+
+    // 6. NOTA (Movida al final)
+    { field: 'nota', headerName: 'Nota', width: 80, type: 'number', editable: true, align: 'center', headerAlign: 'center' }
   ];
 
   if (!token) return <Login onLoginSuccess={() => setToken(localStorage.getItem('token'))} />;

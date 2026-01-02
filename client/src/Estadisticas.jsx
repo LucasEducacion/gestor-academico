@@ -3,7 +3,7 @@ import { Paper, Typography, Box } from '@mui/material';
 
 function Estadisticas({ rows }) {
   
-  // --- CÁLCULOS (Sin cambios) ---
+  // --- CÁLCULOS ---
   const stats = useMemo(() => {
     const totalMaterias = rows.length;
     if (totalMaterias === 0) return null;
@@ -11,8 +11,19 @@ function Estadisticas({ rows }) {
     const aprobadas = rows.filter(r => r.condicion === 'Aprobada');
     const cursadas = rows.filter(r => r.condicion === 'Cursada'); 
     
-    const sumaNotas = aprobadas.reduce((acc, curr) => acc + (Number(curr.nota) || 0), 0);
-    const promedio = aprobadas.length > 0 ? (sumaNotas / aprobadas.length).toFixed(2) : '0.00';
+    // --- CORRECCIÓN AQUÍ ---
+    // 1. Filtramos las materias aprobadas que tienen nota mayor a 0
+    const aprobadasConNota = aprobadas.filter(r => Number(r.nota) > 0);
+    
+    // 2. Sumamos solo esas notas
+    const sumaNotas = aprobadasConNota.reduce((acc, curr) => acc + Number(curr.nota), 0);
+    
+    // 3. Dividimos por la cantidad de materias con nota (no por el total de aprobadas)
+    const promedio = aprobadasConNota.length > 0 
+      ? (sumaNotas / aprobadasConNota.length).toFixed(2) 
+      : '0.00';
+    // -----------------------
+
     const porcentajeCarrera = ((aprobadas.length / totalMaterias) * 100).toFixed(1);
 
     const porAnio = {};
@@ -39,17 +50,17 @@ function Estadisticas({ rows }) {
 
   if (!stats) return null;
 
-  // --- TARJETA (Ancho fijo aumentado un poco para mejor presencia) ---
+  // --- TARJETA (Tu diseño original conservado) ---
   const StatCard = ({ title, value, subcolor = '#4a148c' }) => (
     <Paper elevation={4} sx={{ 
       overflow: 'hidden', 
       textAlign: 'center', 
       height: '100%',
-      width: '240px',       // <--- Un poco más anchas para que llenen mejor
-      borderRadius: '16px', // Bordes más suaves
+      width: '240px',
+      borderRadius: '16px',
       transition: 'transform 0.2s, box-shadow 0.2s',
       '&:hover': {
-        transform: 'translateY(-5px)', // Flotan hacia arriba al pasar el mouse
+        transform: 'translateY(-5px)',
         boxShadow: '0 8px 16px rgba(0,0,0,0.2)'
       }
     }}>
@@ -59,7 +70,7 @@ function Estadisticas({ rows }) {
         </Typography>
       </Box>
       <Box sx={{ py: 3, bgcolor: 'white' }}>
-        <Typography variant="h3" fontWeight="bold" color={subcolor}> {/* Letra un poco más grande (h3) */}
+        <Typography variant="h3" fontWeight="bold" color={subcolor}>
           {value}
         </Typography>
       </Box>
@@ -67,16 +78,16 @@ function Estadisticas({ rows }) {
   );
 
   return (
-    <Box sx={{ mb: 6, mt: 2 }}> {/* Margen superior agregado */}
+    <Box sx={{ mb: 6, mt: 2 }}>
       
       {/* SECCIÓN 1: TARJETAS SUPERIORES */}
       <Box sx={{ 
           display: 'flex', 
           flexWrap: 'wrap',
-          gap: 2,                     // Gap mínimo de seguridad
-          justifyContent: 'space-evenly', // <--- LA CLAVE: Esto empuja las tarjetas para usar todo el ancho
+          gap: 2,
+          justifyContent: 'space-evenly',
           mb: 5,
-          width: '100%'               // Asegura que el contenedor ocupe todo
+          width: '100%'
       }}>
           <StatCard title="Materias Aprobadas" value={stats.cantAprobadas} />
           <StatCard title="Porcentaje Carrera" value={`${stats.porcentajeCarrera}%`} />
@@ -85,7 +96,7 @@ function Estadisticas({ rows }) {
           <StatCard title="Promedio General" value={stats.promedio} subcolor="#1565c0" />
       </Box>
 
-      {/* SECCIÓN 2: TABLA DE DESGLOSE (Sin cambios) */}
+      {/* SECCIÓN 2: TABLA DE DESGLOSE */}
       <Paper elevation={3} sx={{ overflow: 'hidden', borderRadius: '12px' }}>
         <Box sx={{ bgcolor: '#2c3e50', color: 'white', p: 1.5, textAlign: 'center' }}>
             <Typography variant="subtitle1" fontWeight="bold">PROGRESO POR AÑO</Typography>
